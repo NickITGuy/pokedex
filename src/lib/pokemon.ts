@@ -1,4 +1,4 @@
-const API_BASE = "https://pokeapi.co/api/v2";
+const API_BASE = "https://pokeapi.co/api/v2/";
 
 export interface Pokemon {
   id: number;
@@ -35,6 +35,43 @@ export interface PokemonListResponse {
   next: string | null;
   previous: string | null;
   results: PokemonListItem[];
+}
+
+export interface EvolutionNode {
+  id: number;
+  name: string;
+  evolvesTo: EvolutionNode[];
+}
+
+interface PokemonSpeciesResponse {
+  evolution_chain: {
+    url: string;
+  };
+}
+
+interface EvolutionChainLink {
+  species: {
+    name: string;
+    url: string;
+  };
+  evolves_to: EvolutionChainLink[];
+}
+
+interface EvolutionChainResponse {
+  chain: EvolutionChainLink;
+}
+
+function getPokemonIdFromSpeciesUrl(url: string): number {
+  const match = url.match(/\/pokemon-species\/(\d+)\/?$/);
+  return match ? Number(match[1]) : 0;
+}
+
+function mapEvolutionLink(link: EvolutionChainLink): EvolutionNode {
+  return {
+    id: getPokemonIdFromSpeciesUrl(link.species.url),
+    name: link.species.name,
+    evolvesTo: link.evolves_to.map(mapEvolutionLink),
+  };
 }
 
 export async function searchPokemon(query: string): Promise<Pokemon | null> {
@@ -79,6 +116,25 @@ export async function getPokemonDetails(
     return await response.json();
   } catch (error) {
     console.error("Failed to fetch pokemon details:", error);
+    return null;
+  }
+}
+
+export async function getPokemonEvolutionChain(
+  nameOrId: string | number
+): Promise<EvolutionNode | null> {
+  try {
+    const speciesResponse = await fetch(`${API_BASE}/pokemon-species/${nameOrId}`);
+    if (!speciesResponse.ok) return null;
+
+    const species: PokemonSpeciesResponse = await speciesResponse.json();
+    const chainResponse = await fetch(species.evolution_chain.url);
+    if (!chainResponse.ok) return null;
+
+    const chain: EvolutionChainResponse = await chainResponse.json();
+    return mapEvolutionLink(chain.chain);
+  } catch (error) {
+    console.error("Failed to fetch pokemon evolution chain:", error);
     return null;
   }
 }

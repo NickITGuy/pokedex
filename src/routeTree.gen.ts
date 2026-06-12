@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PokemonPokemonRouteImport } from './routes/pokemon.$pokemon'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PokemonPokemonRoute = PokemonPokemonRouteImport.update({
+  id: '/pokemon/$pokemon',
+  path: '/pokemon/$pokemon',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/pokemon/$pokemon': typeof PokemonPokemonRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/pokemon/$pokemon': typeof PokemonPokemonRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/pokemon/$pokemon': typeof PokemonPokemonRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/pokemon/$pokemon'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/pokemon/$pokemon'
+  id: '__root__' | '/' | '/pokemon/$pokemon'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PokemonPokemonRoute: typeof PokemonPokemonRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pokemon/$pokemon': {
+      id: '/pokemon/$pokemon'
+      path: '/pokemon/$pokemon'
+      fullPath: '/pokemon/$pokemon'
+      preLoaderRoute: typeof PokemonPokemonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PokemonPokemonRoute: PokemonPokemonRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
