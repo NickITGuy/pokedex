@@ -15,6 +15,12 @@ export interface Pokemon {
       name: string;
     };
   }>;
+  abilities: Array<{
+    ability: {
+      name: string;
+    };
+    is_hidden: boolean;
+  }>;
   height: number;
   weight: number;
   stats: Array<{
@@ -47,6 +53,12 @@ interface PokemonSpeciesResponse {
   evolution_chain: {
     url: string;
   };
+  flavor_text_entries?: Array<{
+    flavor_text: string;
+    language: {
+      name: string;
+    };
+  }>;
 }
 
 interface EvolutionChainLink {
@@ -135,6 +147,27 @@ export async function getPokemonEvolutionChain(
     return mapEvolutionLink(chain.chain);
   } catch (error) {
     console.error("Failed to fetch pokemon evolution chain:", error);
+    return null;
+  }
+}
+
+export async function getPokemonFlavorText(
+  nameOrId: string | number
+): Promise<string | null> {
+  try {
+    const speciesResponse = await fetch(`${API_BASE}pokemon-species/${nameOrId}`);
+    if (!speciesResponse.ok) return null;
+
+    const species: PokemonSpeciesResponse = await speciesResponse.json();
+    const englishEntry = species.flavor_text_entries?.find(
+      (entry) => entry.language.name === "en"
+    );
+
+    if (!englishEntry?.flavor_text) return null;
+
+    return englishEntry.flavor_text.replace(/[\n\f]/g, " ").trim();
+  } catch (error) {
+    console.error("Failed to fetch pokemon flavor text:", error);
     return null;
   }
 }

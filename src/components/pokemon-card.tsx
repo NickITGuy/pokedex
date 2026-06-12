@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "#/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import {
+  getPokemonFlavorText,
   getPokemonEvolutionChain,
   type EvolutionNode,
   type Pokemon,
@@ -117,6 +118,8 @@ export function PokemonCard({ pokemon, onPokemonSelect }: PokemonCardProps) {
     null
   );
   const [evolutionLoading, setEvolutionLoading] = useState(false);
+  const [flavorText, setFlavorText] = useState<string | null>(null);
+  const [flavorTextLoading, setFlavorTextLoading] = useState(false);
 
   const imageUrl =
     pokemon.sprites.other["official-artwork"].front_default ||
@@ -137,6 +140,27 @@ export function PokemonCard({ pokemon, onPokemonSelect }: PokemonCardProps) {
     }
 
     fetchEvolutionChain();
+
+    return () => {
+      isActive = false;
+    };
+  }, [pokemon.id]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchFlavorText() {
+      setFlavorTextLoading(true);
+      setFlavorText(null);
+
+      const text = await getPokemonFlavorText(pokemon.id);
+      if (isActive) {
+        setFlavorText(text);
+        setFlavorTextLoading(false);
+      }
+    }
+
+    fetchFlavorText();
 
     return () => {
       isActive = false;
@@ -177,6 +201,33 @@ export function PokemonCard({ pokemon, onPokemonSelect }: PokemonCardProps) {
                 {type.type.name}
               </Badge>
             ))}
+          </div>
+        </div>
+
+        {/* Abilities */}
+        <div>
+          <h3 className="text-sm font-semibold mb-2 dark:text-white">Abilities</h3>
+          <div className="flex gap-2 flex-wrap">
+            {pokemon.abilities.map((item) => (
+              <Badge
+                key={item.ability.name}
+                variant="secondary"
+                className="capitalize cursor-default"
+              >
+                {item.ability.name.replace(/-/g, " ")}
+                {item.is_hidden ? " (Hidden)" : ""}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Flavor Text */}
+        <div>
+          <h3 className="text-sm font-semibold mb-2 dark:text-white">Flavor Text</h3>
+          <div className="rounded-lg bg-gray-50 p-3 text-sm italic text-gray-700 dark:bg-slate-700 dark:text-gray-200">
+            {flavorTextLoading && "Loading flavor text..."}
+            {!flavorTextLoading && flavorText && `\"${flavorText}\"`}
+            {!flavorTextLoading && !flavorText && "Flavor text unavailable."}
           </div>
         </div>
 
