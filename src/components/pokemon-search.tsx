@@ -3,6 +3,7 @@ import { Input } from "#/components/ui/input";
 import { Button } from "#/components/ui/button";
 import { PokemonCard } from "#/components/pokemon-card";
 import { DarkModeToggle } from "#/components/dark-mode-toggle";
+import { PopularPokemonGrid } from "#/components/popular-pokemon-grid";
 
 const API_BASE = "https://pokeapi.co/api/v2";
 
@@ -45,11 +46,22 @@ export function PokemonSearch() {
     }
   }
 
+  const handlePokemonSelect = (name: string) => {
+    setSearchQuery(name)
+    searchPokemon(name).then((result) => {
+      if (result) {
+        setPokemon(result)
+      } else {
+        setError(`Pokémon "${name}" not found!`)
+      }
+    })
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-50 to-yellow-50 dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
       <div className="container mx-auto px-4 py-12">
         {/* Header with Toggle */}
-        <div className="flex justify-between items-start mb-12">
+        <div className="flex justify-between items-start mb-8">
           <div className="flex-1 text-center">
             <h1 className="text-5xl font-bold text-red-600 dark:text-red-500 mb-2">Pokédex</h1>
             <p className="text-gray-600 dark:text-gray-400">Search for your favorite Pokémon</p>
@@ -58,7 +70,7 @@ export function PokemonSearch() {
         </div>
 
         {/* Search Form */}
-        <form onSubmit={handleSearch} className="max-w-md mx-auto mb-12">
+        <form onSubmit={handleSearch} className="max-w-md mx-auto mb-8">
           <div className="flex gap-2">
             <Input
               placeholder="Enter Pokémon name or ID..."
@@ -71,6 +83,20 @@ export function PokemonSearch() {
             </Button>
           </div>
         </form>
+
+        {/* Prompt Message - Show when no search results */}
+        {!pokemon && !loading && !error && (
+          <div className="text-center py-4 mb-8 text-gray-500 dark:text-gray-400">
+            <p className="text-lg">
+              👀 Start searching to see Pokémon details
+            </p>
+          </div>
+        )}
+
+        {/* Popular Pokemon Grid - Only show when no search results */}
+        {!pokemon && !loading && !error && (
+          <PopularPokemonGrid onPokemonSelect={handlePokemonSelect} />
+        )}
 
         {/* Results */}
         <div className="flex justify-center">
@@ -91,48 +117,7 @@ export function PokemonSearch() {
           )}
 
           {pokemon && !loading && <PokemonCard pokemon={pokemon} />}
-
-          {!pokemon && !loading && !error && (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-              <p className="text-lg">
-                👀 Start searching to see Pokémon details
-              </p>
-            </div>
-          )}
         </div>
-
-        {/* Quick Links */}
-        {!pokemon && !loading && !error && (
-          <div className="mt-16 max-w-2xl mx-auto">
-            <h2 className="text-xl font-semibold text-center mb-6 text-gray-900 dark:text-white">
-              Popular Pokémon
-            </h2>
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-              {[
-                'pikachu',
-                'charizard',
-                'blastoise',
-                'venusaur',
-                'alakazam',
-                'arcanine',
-              ].map((name) => (
-                <Button
-                  key={name}
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery(name)
-                    searchPokemon(name).then((result) => {
-                      if (result) setPokemon(result)
-                    })
-                  }}
-                  className="capitalize text-sm"
-                >
-                  {name}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
