@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "#/components/ui/input";
 import { Button } from "#/components/ui/button";
 import { PokemonCard } from "#/components/pokemon-card";
 import { DarkModeToggle } from "#/components/dark-mode-toggle";
 import { PopularPokemonGrid } from "#/components/popular-pokemon-grid";
+import { SearchSuggestions } from "#/components/search-suggestions";
+import { searchSuggestions } from "#/lib/search";
+import type { PokemonSuggestion } from "#/lib/search";
 
 const API_BASE = "https://pokeapi.co/api/v2";
 
@@ -26,36 +29,75 @@ export function PokemonSearch() {
   const [searchQuery, setSearchQuery] = useState("");
   const [pokemon, setPokemon] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<PokemonSuggestion[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const selectedSuggestionRef = useRef<string | null>(null);
+
+  // Fetch suggestions as user types
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      selectedSuggestionRef.current = null;
+      return;
+    }
+
+    if (selectedSuggestionRef.current === searchQuery) {
+      setSuggestions([]);
+      setSuggestionsLoading(false);
+      setShowSuggestions(false);
+      return;
+    }
+
+    setSuggestionsLoading(true);
+    timeoutRef.current = setTimeout(async () => {
+      const results = await searchSuggestions(searchQuery, 8);
+      setSuggestions(results);
+      setSuggestionsLoading(false);
+      setShowSuggestions(true);
+    }, 300); // Debounce for 300ms
+  }, [searchQuery]);
 
   const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!searchQuery.trim()) return
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
 
-    setLoading(true)
-    setError(null)
-    setPokemon(null)
+    setLoading(true);
+    setError(null);
+    setPokemon(null);
+    setShowSuggestions(false);
 
-    const result = await searchPokemon(searchQuery)
-    setLoading(false)
+    const result = await searchPokemon(searchQuery);
+    setLoading(false);
 
     if (result) {
-      setPokemon(result)
+      setPokemon(result);
     } else {
-      setError(`Pokémon "${searchQuery}" not found. Try another name or ID!`)
+      setError(`Pokémon "${searchQuery}" not found. Try another name or ID!`);
     }
-  }
+  };
 
   const handlePokemonSelect = (name: string) => {
-    setSearchQuery(name)
+    selectedSuggestionRef.current = name;
+    setSearchQuery(name);
+    setSuggestions([]);
+    setSuggestionsLoading(false);
+    setShowSuggestions(false);
     searchPokemon(name).then((result) => {
       if (result) {
-        setPokemon(result)
+        setPokemon(result);
       } else {
-        setError(`Pokémon "${name}" not found!`)
+        setError(`Pokémon "${name}" not found!`);
       }
-    })
-  }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-50 to-yellow-50 dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
@@ -69,20 +111,32 @@ export function PokemonSearch() {
           <DarkModeToggle />
         </div>
 
-        {/* Search Form */}
-        <form onSubmit={handleSearch} className="max-w-md mx-auto mb-8">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Enter Pokémon name or ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1"
+        {/* Search Form with Suggestions */}
+        <div className="max-w-md mx-auto mb-8 relative">
+          <form onSubmit={handleSearch} className="">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter Pokémon name or ID..."
+                value={searchQuery}
+                onChange={(e) => {
+                  selectedSuggestionRef.current = null;
+                  setSearchQuery(e.target.value);
+                }}
+                className="flex-1"
+              />
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Searching...' : 'Search'}
+              </Button>
+            </div>
+          </form>
+          {showSuggestions && (
+            <SearchSuggestions
+              suggestions={suggestions}
+              isLoading={suggestionsLoading}
+              onSelect={handlePokemonSelect}
             />
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Searching...' : 'Search'}
-            </Button>
-          </div>
-        </form>
+          )}
+        </div>
 
         {/* Prompt Message - Show when no search results */}
         {!pokemon && !loading && !error && (
