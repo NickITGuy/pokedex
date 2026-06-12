@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Input } from "#/components/ui/input";
 import { Button } from "#/components/ui/button";
 import { PokemonCard } from "#/components/pokemon-card";
+import { DarkModeToggle } from "#/components/dark-mode-toggle";
 
 const API_BASE = "https://pokeapi.co/api/v2";
 
@@ -45,12 +46,15 @@ export function PokemonSearch() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-red-50 to-yellow-50">
+    <div className="min-h-screen bg-gradient-to-b from-red-50 to-yellow-50 dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
       <div className="container mx-auto px-4 py-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-red-600 mb-2">Pokédex</h1>
-          <p className="text-gray-600">Search for your favorite Pokémon</p>
+        {/* Header with Toggle */}
+        <div className="flex justify-between items-start mb-12">
+          <div className="flex-1 text-center">
+            <h1 className="text-5xl font-bold text-red-600 dark:text-red-500 mb-2">Pokédex</h1>
+            <p className="text-gray-600 dark:text-gray-400">Search for your favorite Pokémon</p>
+          </div>
+          <DarkModeToggle />
         </div>
 
         {/* Search Form */}
@@ -72,15 +76,15 @@ export function PokemonSearch() {
         <div className="flex justify-center">
           {loading && (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Searching...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 dark:border-red-500 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Searching...</p>
             </div>
           )}
 
           {error && (
-            <div className="max-w-md w-full bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-              <p className="text-red-700 font-medium">{error}</p>
-              <p className="text-sm text-red-600 mt-2">
+            <div className="max-w-md w-full bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-lg p-4 text-center">
+              <p className="text-red-700 dark:text-red-300 font-medium">{error}</p>
+              <p className="text-sm text-red-600 dark:text-red-400 mt-2">
                 Try searching by name (e.g., "pikachu") or by ID (e.g., "25")
               </p>
             </div>
@@ -89,7 +93,7 @@ export function PokemonSearch() {
           {pokemon && !loading && <PokemonCard pokemon={pokemon} />}
 
           {!pokemon && !loading && !error && (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
               <p className="text-lg">
                 👀 Start searching to see Pokémon details
               </p>
@@ -100,7 +104,7 @@ export function PokemonSearch() {
         {/* Quick Links */}
         {!pokemon && !loading && !error && (
           <div className="mt-16 max-w-2xl mx-auto">
-            <h2 className="text-xl font-semibold text-center mb-6">
+            <h2 className="text-xl font-semibold text-center mb-6 text-gray-900 dark:text-white">
               Popular Pokémon
             </h2>
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">

@@ -1,6 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import { DarkModeProvider } from '#/contexts/dark-mode'
 
 import appCss from '../styles.css?url'
 
@@ -35,7 +36,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <DarkModeProvider>
+          {children}
+        </DarkModeProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
